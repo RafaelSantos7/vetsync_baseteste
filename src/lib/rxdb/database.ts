@@ -1,4 +1,10 @@
-import { createRxDatabase, addRxPlugin, type RxDatabase, type RxCollection, type RxStorage } from "rxdb";
+import {
+  createRxDatabase,
+  addRxPlugin,
+  type RxDatabase,
+  type RxCollection,
+  type RxStorage,
+} from "rxdb";
 import { getRxStorageDexie } from "rxdb/plugins/storage-dexie";
 import { RxDBUpdatePlugin } from "rxdb/plugins/update";
 import { wrappedValidateAjvStorage } from "rxdb/plugins/validate-ajv";
@@ -23,7 +29,7 @@ async function buildDatabase(): Promise<AppDatabase> {
     ? wrappedValidateAjvStorage({ storage: getRxStorageDexie() })
     : getRxStorageDexie();
   const db = await createRxDatabase<AppCollections>({
-    name: "vetsystempro",
+    name: "vetsystempro2",
     storage,
     multiInstance: true,
     eventReduce: true,
@@ -48,7 +54,9 @@ export function getDatabase(): Promise<AppDatabase> {
         const code = err?.code || err?.parameters?.errors?.[0]?.code;
         const msg = String(err?.message || "");
         const isSchemaConflict =
-          code === "DB6" || code === "DB9" || code === "COL17" ||
+          code === "DB6" ||
+          code === "DB9" ||
+          code === "COL17" ||
           /\bDB6\b|\bDB9\b|\bCOL17\b/.test(msg);
         if (isSchemaConflict) {
           console.warn("[rxdb] schema conflict — wiping local DB and recreating…", err);
@@ -72,7 +80,9 @@ async function wipeLocalIndexedDb() {
       try {
         const req = indexedDB.deleteDatabase(name);
         req.onsuccess = req.onerror = req.onblocked = () => res();
-      } catch { res(); }
+      } catch {
+        res();
+      }
     });
   try {
     const list = (indexedDB as any).databases ? await (indexedDB as any).databases() : [];
@@ -87,7 +97,11 @@ export async function resetLocalDatabase() {
   try {
     if (dbPromise) {
       const db = await dbPromise.catch(() => null);
-      if (db) { try { await db.remove(); } catch {} }
+      if (db) {
+        try {
+          await db.remove();
+        } catch {}
+      }
     }
   } finally {
     dbPromise = null;
