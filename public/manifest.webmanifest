@@ -1,0 +1,12 @@
+{
+  "name": "VetSystem — Prontuário Veterinário",
+  "short_name": "VetSystem",
+  "description": "Sistema veterinário premium com odontograma equino e modo offline.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c1218",
+  "theme_color": "#0c1218",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "any", "type": "image/x-icon" }
+  ]
+}
