@@ -91,6 +91,7 @@ async function wipeLocalIndexedDb() {
     }
   } catch {}
   await tryDelete("vetsystempro");
+  await tryDelete("vetsystempro2");
 }
 
 export async function resetLocalDatabase() {
