@@ -38,7 +38,7 @@ async function buildDatabase(): Promise<AppDatabase> {
   const db = await createRxDatabase<AppCollections>({
     name: DB_NAME,
     storage,
-    multiInstance: true,
+    multiInstance: false,
     eventReduce: true,
     ignoreDuplicate: true,
   });
