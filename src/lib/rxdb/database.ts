@@ -22,56 +22,51 @@ if (import.meta.env.DEV) {
 export type AppCollections = Record<CollectionName, RxCollection<any>>;
 export type AppDatabase = RxDatabase<AppCollections>;
 
-let dbPromise: Promise<AppDatabase> | null = null;
+declare global {
+  interface Window {
+    __vetSystemRxDbPromise?: Promise<AppDatabase> | null;
+  }
+}
+
+const DB_NAME = "vetsystempro3";
 
 async function buildDatabase(): Promise<AppDatabase> {
   const storage: RxStorage<any, any> = import.meta.env.DEV
     ? wrappedValidateAjvStorage({ storage: getRxStorageDexie() })
     : getRxStorageDexie();
+
   const db = await createRxDatabase<AppCollections>({
-    name: "vetsystempro2",
+    name: DB_NAME,
     storage,
     multiInstance: true,
     eventReduce: true,
     ignoreDuplicate: true,
   });
+
   const collections = Object.fromEntries(
     COLLECTION_NAMES.map((n) => [n, { schema: SCHEMAS[n] as any }]),
   ) as any;
+
   await db.addCollections(collections);
   return db;
 }
 
 export function getDatabase(): Promise<AppDatabase> {
-  if (!dbPromise) {
-    dbPromise = (async () => {
-      try {
-        console.info("[rxdb] creating database…");
-        const db = await buildDatabase();
-        console.info("[rxdb] ready ✅");
-        return db;
-      } catch (err: any) {
-        const code = err?.code || err?.parameters?.errors?.[0]?.code;
-        const msg = String(err?.message || "");
-        const isSchemaConflict =
-          code === "DB6" ||
-          code === "DB9" ||
-          code === "COL17" ||
-          /\bDB6\b|\bDB9\b|\bCOL17\b/.test(msg);
-        if (isSchemaConflict) {
-          console.warn("[rxdb] schema conflict — wiping local DB and recreating…", err);
-          await wipeLocalIndexedDb();
-          const db = await buildDatabase();
-          console.info("[rxdb] ready (after reset) ✅");
-          return db;
-        }
-        console.error("[rxdb] init FAILED:", err);
-        dbPromise = null;
-        throw err;
-      }
+  if (!window.__vetSystemRxDbPromise) {
+    window.__vetSystemRxDbPromise = (async () => {
+      console.info("[rxdb] creating database…");
+      const db = await buildDatabase();
+      console.info("[rxdb] ready ✅");
+      return db;
     })();
+
+    window.__vetSystemRxDbPromise.catch((err) => {
+      console.error("[rxdb] init FAILED:", err);
+      window.__vetSystemRxDbPromise = null;
+    });
   }
-  return dbPromise;
+
+  return window.__vetSystemRxDbPromise;
 }
 
 async function wipeLocalIndexedDb() {
@@ -84,20 +79,23 @@ async function wipeLocalIndexedDb() {
         res();
       }
     });
+
   try {
     const list = (indexedDB as any).databases ? await (indexedDB as any).databases() : [];
     for (const d of list) {
       if (d?.name && d.name.includes("vetsystempro")) await tryDelete(d.name);
     }
   } catch {}
+
   await tryDelete("vetsystempro");
   await tryDelete("vetsystempro2");
+  await tryDelete("vetsystempro3");
 }
 
 export async function resetLocalDatabase() {
   try {
-    if (dbPromise) {
-      const db = await dbPromise.catch(() => null);
+    if (window.__vetSystemRxDbPromise) {
+      const db = await window.__vetSystemRxDbPromise.catch(() => null);
       if (db) {
         try {
           await db.remove();
@@ -105,14 +103,15 @@ export async function resetLocalDatabase() {
       }
     }
   } finally {
-    dbPromise = null;
+    window.__vetSystemRxDbPromise = null;
     await wipeLocalIndexedDb();
   }
 }
 
 export async function destroyDatabase() {
-  if (!dbPromise) return;
-  const db = await dbPromise;
+  if (!window.__vetSystemRxDbPromise) return;
+
+  const db = await window.__vetSystemRxDbPromise;
   await db.remove();
-  dbPromise = null;
+  window.__vetSystemRxDbPromise = null;
 }
