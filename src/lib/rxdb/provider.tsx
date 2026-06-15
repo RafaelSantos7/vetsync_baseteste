@@ -11,7 +11,13 @@ type Ctx = {
   pendingPush: number;
 };
 
-const RxCtx = createContext<Ctx>({ db: null, ready: false, online: true, syncing: false, pendingPush: 0 });
+const RxCtx = createContext<Ctx>({
+  db: null,
+  ready: false,
+  online: true,
+  syncing: false,
+  pendingPush: 0,
+});
 
 export function RxDBProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -31,7 +37,9 @@ export function RxDBProvider({ children }: { children: React.ReactNode }) {
         setReady(true);
       }
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Start / stop replication with auth state.
@@ -40,13 +48,17 @@ export function RxDBProvider({ children }: { children: React.ReactNode }) {
     let stopped = false;
     if (user) {
       startReplication(db).then((mgr) => {
-        if (stopped) { mgr.stop(); return; }
+        if (stopped) {
+          mgr.stop();
+          return;
+        }
         managerRef.current = mgr;
 
         // Wire active state from all replication states.
         const subs: Array<{ unsubscribe: () => void }> = [];
         const recomputeSync = () => {
-          let active = 0; let pending = 0;
+          let active = 0;
+          let pending = 0;
           for (const [, rep] of mgr.states) {
             if ((rep as any).active$?.getValue?.()) active++;
           }
@@ -62,7 +74,10 @@ export function RxDBProvider({ children }: { children: React.ReactNode }) {
     return () => {
       stopped = true;
       const mgr = managerRef.current;
-      if (mgr) { mgr.stop(); managerRef.current = null; }
+      if (mgr) {
+        mgr.stop();
+        managerRef.current = null;
+      }
       setSyncing(false);
     };
   }, [db, user?.id]);
@@ -83,7 +98,10 @@ export function RxDBProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const value = useMemo<Ctx>(() => ({ db, ready, online, syncing, pendingPush }), [db, ready, online, syncing, pendingPush]);
+  const value = useMemo<Ctx>(
+    () => ({ db, ready, online, syncing, pendingPush }),
+    [db, ready, online, syncing, pendingPush],
+  );
   return <RxCtx.Provider value={value}>{children}</RxCtx.Provider>;
 }
 

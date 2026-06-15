@@ -40,7 +40,7 @@ async function buildDatabase(): Promise<AppDatabase> {
     storage,
     multiInstance: false,
     eventReduce: true,
-    ignoreDuplicate: true,
+    ignoreDuplicate: false,
   });
 
   const collections = Object.fromEntries(
