@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { AppointmentsChart } from "@/components/dashboard/appointments-chart";
 import { CategoryChart } from "@/components/dashboard/category-chart";
+import { useRxDB } from "@/lib/rxdb/provider";
 import { useMemo } from "react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -51,17 +52,18 @@ function StatCard({ label, value, hint, icon: Icon, delay = 0, to }: StatCardPro
 
 function Dashboard() {
   const { organizationId } = useAuth();
+  const { initialSyncDone } = useRxDB();
 
   const orgSel = { is_deleted: { $ne: true }, organization_id: { $eq: organizationId } } as any;
 
-  const { data: pets = [], isLoading: loadingPets } = useRxQuery("pets", { selector: orgSel }, [organizationId]);
-  const { data: clients = [], isLoading: loadingClients } = useRxQuery("clients", { selector: orgSel }, [organizationId]);
-  const { data: properties = [], isLoading: loadingProps } = useRxQuery("properties", { selector: orgSel }, [organizationId]);
-  const { data: appointments = [], isLoading: loadingAppts } = useRxQuery<any>("appointments", { selector: orgSel }, [organizationId]);
-  const { data: vaccines = [] } = useRxQuery("vaccines", { selector: orgSel }, [organizationId]);
-  const { data: transactions = [] } = useRxQuery("financial_transactions", { selector: orgSel }, [organizationId]);
+  const { data: pets = [], isLoading: loadingPets } = useRxQuery("pets", { selector: orgSel }, [organizationId, initialSyncDone]);
+  const { data: clients = [], isLoading: loadingClients } = useRxQuery("clients", { selector: orgSel }, [organizationId, initialSyncDone]);
+  const { data: properties = [], isLoading: loadingProps } = useRxQuery("properties", { selector: orgSel }, [organizationId, initialSyncDone]);
+  const { data: appointments = [], isLoading: loadingAppts } = useRxQuery<any>("appointments", { selector: orgSel }, [organizationId, initialSyncDone]);
+  const { data: vaccines = [] } = useRxQuery("vaccines", { selector: orgSel }, [organizationId, initialSyncDone]);
+  const { data: transactions = [] } = useRxQuery("financial_transactions", { selector: orgSel }, [organizationId, initialSyncDone]);
 
-  const isLoading = loadingPets || loadingClients || loadingProps || loadingAppts;
+  const isLoading = !initialSyncDone || loadingPets || loadingClients || loadingProps || loadingAppts;
 
   const stats = useMemo(() => {
     const now = new Date();

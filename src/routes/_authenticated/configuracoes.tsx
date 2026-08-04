@@ -182,7 +182,7 @@ function TeamSettings() {
         return {
           user_id: m.user_id,
           org_role: m.role,
-          app_role: roles.find((x) => x.user_id === m.user_id)?.role ?? "veterinario",
+          app_role: roles.find((x) => x.user_id === m.user_id)?.role ?? "veterinarian",
           full_name: p?.full_name ?? "Colaborador",
           email: p?.email ?? "",
           phone: p?.phone ?? "",

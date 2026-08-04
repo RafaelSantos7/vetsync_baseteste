@@ -60,13 +60,13 @@ export function normalizeRole(role: string | undefined): AppRole {
   const r = role.toLowerCase().trim();
   
   // Mapping synonyms to standard roles
-  if (['admin', 'owner', 'proprietario', 'proprietário', 'administrator'].includes(r)) return 'admin';
+  if (['admin', 'owner', 'proprietario', 'proprietário', 'administrator', 'administrator'].includes(r)) return 'admin';
   if (['veterinarian', 'veterinario', 'veterinário', 'vet'].includes(r)) return 'veterinarian';
-  if (['reception', 'recepcao', 'recepção', 'recepcionista'].includes(r)) return 'reception';
+  if (['reception', 'recepcao', 'recepção', 'recepcionista', 'recepcionista'].includes(r)) return 'reception';
   
   // Handle specific organization_members roles if they bleed through
-  if (r === 'member') return 'veterinarian';
-  if (r === 'viewer') return 'reception';
+  if (['member', 'colaborador'].includes(r)) return 'veterinarian';
+  if (['viewer', 'leitura'].includes(r)) return 'reception';
 
   return 'reception'; // Default to lowest permission
 }

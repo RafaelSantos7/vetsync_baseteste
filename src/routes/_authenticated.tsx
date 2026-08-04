@@ -23,12 +23,12 @@ function AuthLayout() {
   const allowed = resolving ? true : canAccessModule(role, path);
 
   useEffect(() => {
-    if (!allowed && !resolving) {
+    if (!allowed && !resolving && !hasOAuthCallback) {
       toast.error("Você não possui permissão para acessar esta seção.", {
         icon: <AlertCircle className="h-4 w-4" />,
       });
     }
-  }, [allowed, resolving]);
+  }, [allowed, resolving, hasOAuthCallback]);
 
   if (resolving) {
     return (
@@ -39,7 +39,11 @@ function AuthLayout() {
   }
   
   if (!user) return <Navigate to="/login" />;
-  if (!allowed && !hasOAuthCallback) return <Navigate to="/dashboard" />;
+  
+  // Explicitly check for unauthorized access and redirect to dashboard
+  if (!allowed && !hasOAuthCallback) {
+    return <Navigate to="/dashboard" />;
+  }
 
 
   return (
