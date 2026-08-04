@@ -1,0 +1,6 @@
+project_id = "trrdtgnucgltvcrsqwke"
+
+# Google's OAuth redirect hits this endpoint without a user JWT.
+# Security comes from the signed `state` row validated inside the function.
+[functions.google-oauth-callback]
+verify_jwt = false

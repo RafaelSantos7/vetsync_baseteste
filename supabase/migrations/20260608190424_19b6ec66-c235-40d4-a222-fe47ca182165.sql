@@ -1,0 +1,1 @@
+DROP POLICY "profiles view all auth" ON public.profiles; CREATE POLICY "profiles view own" ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = id);
