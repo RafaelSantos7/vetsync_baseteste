@@ -125,8 +125,8 @@ const ORG_ROLE_LABELS: Record<string, string> = {
 
 const APP_ROLE_LABELS: Record<string, string> = {
   admin: "Admin (acesso total)",
-  veterinario: "Veterinário (atendimentos)",
-  recepcao: "Recepção (agenda e cadastros)",
+  veterinarian: "Veterinário (atendimentos)",
+  reception: "Recepção (agenda e cadastros)",
 };
 
 const emptyForm = {
@@ -136,8 +136,9 @@ const emptyForm = {
   phone: "",
   crmv: "",
   org_role: "member",
-  app_role: "veterinario",
+  app_role: "veterinarian",
 };
+
 
 function TeamSettings() {
   const { user, organizationId } = useAuth();

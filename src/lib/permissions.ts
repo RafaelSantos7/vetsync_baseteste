@@ -29,6 +29,13 @@ export const MODULES = {
 export function canAccessModule(role: string | undefined, url: string): boolean {
   const normalizedRole = normalizeRole(role);
   
+  if (import.meta.env.DEV) {
+    console.log(`[Permissions] Checking access for ${url} with role: ${normalizedRole} (raw: ${role})`);
+  }
+
+  // Admin has access to everything
+  if (normalizedRole === 'admin') return true;
+
   const allModules = [
     ...MODULES.PRINCIPAL,
     ...MODULES.CLINICO,
@@ -38,17 +45,29 @@ export function canAccessModule(role: string | undefined, url: string): boolean 
   const module = allModules.find(m => m.url === url || url.startsWith(m.url + '/'));
   if (!module) return true; // Public or unknown routes
   
-  return (module.roles as readonly string[]).includes(normalizedRole);
+  const hasAccess = (module.roles as readonly string[]).includes(normalizedRole);
+  
+  if (import.meta.env.DEV && !hasAccess) {
+    console.warn(`[Permissions] Access DENIED for ${url} (required: ${module.roles.join(', ')})`);
+  }
+
+  return hasAccess;
 }
 
 export function normalizeRole(role: string | undefined): AppRole {
   if (!role) return 'reception';
   
-  const r = role.toLowerCase();
-  if (r === 'owner' || r === 'admin' || r === 'proprietario' || r === 'administrator') return 'admin';
-  if (r === 'veterinarian' || r === 'veterinario' || r === 'vet') return 'veterinarian';
-  if (r === 'reception' || r === 'recepcao' || r === 'recepção' || r === 'recepcionista') return 'reception';
+  const r = role.toLowerCase().trim();
   
+  // Mapping synonyms to standard roles
+  if (['admin', 'owner', 'proprietario', 'proprietário', 'administrator'].includes(r)) return 'admin';
+  if (['veterinarian', 'veterinario', 'veterinário', 'vet'].includes(r)) return 'veterinarian';
+  if (['reception', 'recepcao', 'recepção', 'recepcionista'].includes(r)) return 'reception';
+  
+  // Handle specific organization_members roles if they bleed through
+  if (r === 'member') return 'veterinarian';
+  if (r === 'viewer') return 'reception';
+
   return 'reception'; // Default to lowest permission
 }
 

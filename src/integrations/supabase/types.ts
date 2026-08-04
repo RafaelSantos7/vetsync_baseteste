@@ -1087,7 +1087,12 @@ export type Database = {
       shares_organization: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "veterinario" | "recepcao"
+      app_role:
+        | "admin"
+        | "veterinario"
+        | "recepcao"
+        | "veterinarian"
+        | "reception"
       org_role:
         | "owner"
         | "admin"
@@ -1222,7 +1227,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "veterinario", "recepcao"],
+      app_role: [
+        "admin",
+        "veterinario",
+        "recepcao",
+        "veterinarian",
+        "reception",
+      ],
       org_role: [
         "owner",
         "admin",

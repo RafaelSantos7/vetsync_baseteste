@@ -49,7 +49,15 @@ export function AppSidebar() {
   const isActive = (url: string) => path === url || path.startsWith(url + "/");
   
   const Section = ({ label, items }: { label: string; items: any[] }) => {
-    const filteredItems = items.filter(it => canAccessModule(role, it.url));
+    const filteredItems = items.filter(it => {
+      const access = canAccessModule(role, it.url);
+      return access;
+    });
+    
+    if (import.meta.env.DEV) {
+      console.log(`[Sidebar] Section "${label}": ${filteredItems.length}/${items.length} items visible for role "${role}"`);
+    }
+
     if (filteredItems.length === 0) return null;
 
     return (
@@ -74,6 +82,7 @@ export function AppSidebar() {
       </SidebarGroup>
     );
   };
+
 
   return (
     <Sidebar collapsible="icon">

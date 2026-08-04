@@ -35,19 +35,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // admin > veterinarian > reception
     const RANK: Record<string, number> = { admin: 3, veterinarian: 2, reception: 1 };
+    
     const best = (...roles: (string | undefined | null)[]) => {
       let winner: AppRole = 'reception';
       for (const r of roles) {
         if (!r) continue;
         const n = normalizeRole(r);
-        if (RANK[n] > RANK[winner]) winner = n;
+        if (RANK[n] > RANK[winner]) {
+          winner = n;
+        }
       }
       return winner;
     };
 
     const fetchOrg = async (uid: string, metaRole?: string) => {
       try {
-        const [{ data: members }, { data: appRoles }] = await Promise.all([
+        if (import.meta.env.DEV) console.log(`[Auth] Fetching roles for user ${uid}`);
+
+        const [{ data: members, error: memErr }, { data: appRoles, error: roleErr }] = await Promise.all([
           supabase
             .from("organization_members")
             .select("organization_id, role")
@@ -59,15 +64,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq("user_id", uid),
         ]);
 
+        if (memErr) console.error("[Auth] Error fetching organization_members:", memErr);
+        if (roleErr) console.error("[Auth] Error fetching user_roles:", roleErr);
+
         if (members?.[0]) setOrganizationId(members[0].organization_id);
 
-        // Never let a generic membership value ("member"/"viewer") downgrade a
-        // user whose real app role is admin or veterinarian.
-        setRole(best(members?.[0]?.role, ...(appRoles ?? []).map((r) => r.role), metaRole));
+        const calculatedRole = best(
+          members?.[0]?.role, 
+          ...(appRoles ?? []).map((r) => r.role), 
+          metaRole
+        );
+
+        if (import.meta.env.DEV) {
+          console.log("[Auth] Roles found:", {
+            org_member: members?.[0]?.role,
+            user_roles: (appRoles ?? []).map(r => r.role),
+            app_metadata: metaRole,
+            FINAL_NORMALIZED: calculatedRole
+          });
+        }
+
+        setRole(calculatedRole);
+      } catch (err) {
+        console.error("[Auth] Critical error in fetchOrg:", err);
       } finally {
         setRoleLoaded(true);
       }
     };
+
 
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
